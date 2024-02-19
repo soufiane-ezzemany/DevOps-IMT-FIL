@@ -12,11 +12,45 @@ The goal of the project is to deploy the following application by using Docker a
 
 ## Optional version
 - healthchecks on vote, redis and db services (some scripts are given in `healthcheck` directory)
-- reducing the size of images	
+- reducing the size of images
 - multistage build on the worker service (.NET)
 
 ## Some elements
 
-### Compiling a ...
+### Vote service
+
+This is a Python service. Before starting `app.py` :
+- requirements have to be copied and installed in the container
+- all necessary files and directories have to be copied in the container
+
+### Result service
+
+This is Node.js javascript service.
+
+**TO COMPLETE**
+
+### Seed service
+
+This is a Python and bash service. First the file `make-data.py` has to be executed in the container. Second, the file `generate-votes.sh` has to be executed when starting the container.
+
+**TO COMPLETE for packages**
+
+### Worker service
+
+This is a C# service. 
+
+**TO COMPLETE**
+
+### Redis service
+
+This is a simple redis service.
+
+**TO COMPLETE details on volume healthcheck**
+
+### Db service
+
+This is a postgre service.
+
+**TO COMPLETE details for two volumes**
 
 # Kubernetes project
