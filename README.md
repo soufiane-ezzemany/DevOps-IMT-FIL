@@ -19,9 +19,9 @@ The goal of the project is to deploy the following application by using Docker a
 
 ## Some elements
 
-The base image will contain the basic commands for the language the application is written in.
+The base image will contain the basic tools for the language the application is written in.
 You should use a tag to specify which version of the image you want to pull.
-For building purposes, it is good practice to use a tag containing the version together with the language and `slim`.
+For building purposes, it is good practice to use a `slim` version of the image.
 e.g. for Python `python:3.13-rc-slim`, for Node.js `node:18-slim`
 
 
@@ -54,7 +54,7 @@ Finally, run the code with `node server.js`.
 
 This is a Python and bash service. First the file `make-data.py` has to be executed in the container. Second, the file `generate-votes.sh` has to be executed when starting the container.
 
-**TO COMPLETE for packages**
+For benchmarking, `generate-votes.sh` uses the `ab` utility which needs to be installed, through the `apache2-utils` `apt` package.
 
 ### Worker service
 
@@ -70,13 +70,9 @@ mcr.microsoft.com/dotnet/sdk:7.0
 dotnet restore -a $TARGETARCH
 dotnet publish -c release -o /app -a $TARGETARCH --self-contained false --no-restore
 ```
-The application will be built inside the `/app` directory.
+The application will be built inside the `/app` directory, launch with `dotnet Worker.dll`.
 
-Now, we will use another base image to run the script: `mcr.microsoft.com/dotnet/runtime:7.0`.
-
-In the `/app` directory of our new image:
-- copy the content of `/app` from the build image
-- launch with `dotnet Worker.dll`.
+For the multistage build, use this image: `mcr.microsoft.com/dotnet/runtime:7.0`.
 
 
 ### Redis service
