@@ -81,14 +81,14 @@ This is a simple redis service.
 
 In order to perform healthchecks while Redis is running, there must be a volume attached to the container. You will need to mount local the repo directory `./healthchecks/` into the `/healthchecks/` directory of the container.
 
-The check is done by executing the `redis.sh` script.
+The check is done by executing the `redis.sh` script which uses the `curl` package.
 
 
 ### Db service
 
 This is a simple postgre service.
 
-The same logic applies for healthchecks, mount a volume and use `postgres.sh` for checks.
+The same logic applies for healthchecks, mount a volume, use `postgres.sh` for checks and install `curl`.
 
 Moreover, in order to persist the data that comes from the votes, you need to create a Docker volume and attach it to the container.
 The volume will be named `db-data` and attached to the `/var/lib/postgresql/data` directory inside the container.
