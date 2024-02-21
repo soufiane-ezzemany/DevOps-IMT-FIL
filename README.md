@@ -85,14 +85,14 @@ For the multistage build, use this image: `mcr.microsoft.com/dotnet/runtime:7.0`
 
 ### Redis service
 
-This is a simple Redis service.
+This is a simple Redis service. Redis is a NOSQL database software focused on availability used for storing large volumes of data-structures (typically key-value pairs).
 
 In order to perform healthchecks while Redis is running, there must be a volume attached to the container. You will need to mount local the repo directory `./healthchecks/` into the `/healthchecks/` directory of the container.
 
 The check is done by executing the `redis.sh` script which uses the `curl` package.
 
 
-### Db service
+### PostgreSQL database service
 
 This is a simple PostgreSQL service.
 
@@ -100,6 +100,16 @@ The same logic applies for healthchecks, mount a volume, use `postgres.sh` for c
 
 Moreover, in order to persist the data that comes from the votes, you need to create a Docker volume and attach it to the container.
 The volume will be named `db-data` and attached to the `/var/lib/postgresql/data` directory inside the container.
+
+### Nginx loadbalancer service
+
+This is a simple Nginx service. At its core, Nginx is a web-server but it can also be used for other purposes such as loadbalancing, HTTP cache, reverse proxy, etc.
+
+To configure Nginx as a loadbalancer (LB), you first need to edit accordingly the `./nginx/nginx.conf` file from this repo.
+Then in the Dockerfile:
+- remove the default Nginx configuration located at `/etc/nginx/conf.d/default.conf`,
+- copy `./nginx/nginx.conf` into the container at the above location.
+
 
 ### Networking
 
