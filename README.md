@@ -101,5 +101,10 @@ The same logic applies for healthchecks, mount a volume, use `postgres.sh` for c
 Moreover, in order to persist the data that comes from the votes, you need to create a Docker volume and attach it to the container.
 The volume will be named `db-data` and attached to the `/var/lib/postgresql/data` directory inside the container.
 
+### Networking
+
+* The Redis store, the `worker` service and the PostgreSQL database are only available inside the `back-tier` network.
+* The `vote` and `result` services are on both the `front-tier` and `back-tier` network in order to (1) expose the frontend to users, and (2) communicate with the databases.
+* Finally, the `seed` and Nginx loadbalancer are on the `front-tier`.
 
 # Kubernetes project
