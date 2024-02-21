@@ -2,7 +2,7 @@
 
 The goal of the project is to deploy the following application by using Docker and Docker compose. You will give us a GitHub or Gitlab link for your project.
 
-![image](project-nuage-login.drawio.png)
+![image](login-nuage-voting.drawio.svg)
 
 ## Mandatory version
 - one Dockerfile per service that exposes the internal port of the container
