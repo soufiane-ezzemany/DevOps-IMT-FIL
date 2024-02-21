@@ -25,18 +25,22 @@ For building purposes, it is good practice to use a `slim` version of the image.
 e.g. for Python `python:3.13-rc-slim`, for Node.js `node:18-slim`
 
 
-### Vote service
+### `vote` service
 
-This is a Python service. Before starting `app.py`:
+This is a Python web server using the Flask framework. It presents a front-end for the user to submit their votes, then write them into the Redis key-value store.
+
+For building the Dockerfile, before starting `app.py`:
 - requirements have to be copied and installed in the container
 - all necessary files and directories have to be copied in the container
 
 Port mapping:
 `5000` is used inside the container (see Python code). Each instance of vote will use the external port `500x` where `x` is the instance number
 
-### Result service
+### `result` service
 
-This is a Node.js JavaScript service. Before running the code:
+This is a Node.js web server. The front-end presents the results of the votes. The result values are taken from the PostgreSQL database.
+
+In the Dockerfile, before running the code:
 - copy package files into the container,
 - install `nodemon` with `npm install -g nodemon`
 - install more requirements:
@@ -50,15 +54,19 @@ mv /usr/local/app/node_modules /node_modules
 Finally, run the code with `node server.js`.
 
 
-### Seed service
+### `seed` service
 
-This is a Python and bash service. First the file `make-data.py` has to be executed in the container. Second, the file `generate-votes.sh` has to be executed when starting the container.
+This is a Python and bash program used to virtually send many vote requests to the `vote` server.
+
+First the file `make-data.py` has to be executed in the container. Second, the file `generate-votes.sh` has to be executed when starting the container.
 
 For benchmarking, `generate-votes.sh` uses the `ab` utility which needs to be installed, through the `apache2-utils` `apt` package.
 
-### Worker service
+### `worker` service
 
-This is a C# service. It requires a little bit more work to compile and run:
+This is a .NET (C#) program that reads vote submissions from Redis store, compute the result and store it in the PostgreSQL database.
+
+It requires a little bit more work to compile and run:
 - use this as a base image
 ```
 mcr.microsoft.com/dotnet/sdk:7.0
@@ -77,7 +85,7 @@ For the multistage build, use this image: `mcr.microsoft.com/dotnet/runtime:7.0`
 
 ### Redis service
 
-This is a simple redis service.
+This is a simple Redis service.
 
 In order to perform healthchecks while Redis is running, there must be a volume attached to the container. You will need to mount local the repo directory `./healthchecks/` into the `/healthchecks/` directory of the container.
 
@@ -86,7 +94,7 @@ The check is done by executing the `redis.sh` script which uses the `curl` packa
 
 ### Db service
 
-This is a simple postgre service.
+This is a simple PostgreSQL service.
 
 The same logic applies for healthchecks, mount a volume, use `postgres.sh` for checks and install `curl`.
 
