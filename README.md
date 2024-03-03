@@ -22,7 +22,7 @@ The goal of the project is to deploy the following application by using Docker a
 The base image will contain the basic tools for the language the application is written in.
 You should use a tag to specify which version of the image you want to pull.
 For building purposes, it is good practice to use a `slim` version of the image.
-e.g. for Python `python:3.13-rc-slim`, for Node.js `node:18-slim`
+
 
 
 ### `vote` service
@@ -36,11 +36,14 @@ For building the Dockerfile, before starting `app.py`:
 Port mapping:
 `5000` is used inside the container (see Python code). Each instance of vote will use the external port `500x` where `x` is the instance number
 
+Healthcheck:
+
+
 ### `result` service
 
 This is a Node.js web server. The front-end presents the results of the votes. The result values are taken from the PostgreSQL database.
 
-In the Dockerfile, before running the code:
+In the Dockerfile, before running the code, make the working directory to `/usr/local/app` and
 - copy package files into the container,
 - install `nodemon` with `npm install -g nodemon`
 - install more requirements:
@@ -89,14 +92,14 @@ This is a simple Redis service. Redis is a NOSQL database software focused on av
 
 In order to perform healthchecks while Redis is running, there must be a volume attached to the container. You will need to mount local the repo directory `./healthchecks/` into the `/healthchecks/` directory of the container.
 
-The check is done by executing the `redis.sh` script which uses the `curl` package.
+The check is done by executing the `redis.sh` script.
 
 
 ### PostgreSQL database service
 
 This is a simple PostgreSQL service.
 
-The same logic applies for healthchecks, mount a volume, use `postgres.sh` for checks and install `curl`.
+The same logic applies for healthchecks, mount a volume, use `postgres.sh` for running checks.
 
 Moreover, in order to persist the data that comes from the votes, you need to create a Docker volume and attach it to the container.
 The volume will be named `db-data` and attached to the `/var/lib/postgresql/data` directory inside the container.
@@ -117,4 +120,57 @@ Then in the Dockerfile:
 * The `vote` and `result` services are on both the `front-tier` and `back-tier` network in order to (1) expose the frontend to users, and (2) communicate with the databases.
 * Finally, the `seed` and Nginx loadbalancer are on the `front-tier`.
 
+
+
 # Kubernetes project
+
+The goal of this project is to deploy the previous application to a Kubernetes cluster. Here is a diagram of the expected infrastructure.
+
+![image](login-nuage-voting-k8s.drawio.svg)
+
+## Preliminary phase: push your Docker images into a GCP container registry
+
+1. In the GCP dashboard, go to *Artifact Registry* and create a *Repository*.
+Give it a name e.g. `voting-images`, and a *region* e.g. `europe-west9`.
+Once created, inspect the repository and copy its path, it should look something like `europe-west9-docker.pkg.dev/your-gcp-project/voting-image`.
+
+1. Before pushing to the registry, issue the following command in order to authenticate your laptop to the registry:
+```
+gcloud auth configure-docker europe-west9-docker.pkg.dev
+```
+Note that this command can be found in the "Setup Instructions" button in the registry repo.
+
+1. We then need to tag the images with the corresponding registry path, followed by their original name. We can do it *either* in bulk with bare Docker Compose or one by one with Docker.
+
+    * Option 1: Within `docker-compose.yml` file, for each service that `build`s an image, add the `image` field. E.g. for the `result` service:
+      ```
+      result:
+        image: europe-west9-docker.pkg.dev/your-gcp-project/voting-image/result
+        build:
+          context: ./result
+      ```
+      Re-build the images with `docker compose build` and verify with `docker image ls`.
+
+    * Option 2: For each service we need to build the image and tag the resulting hash. E.g. with `result`:
+        * `docker build result/`
+        * `docker tag 0cc5784ad220 europe-west9-docker.pkg.dev/nuage-k8s/login-nuage-images/result`
+
+1. Finally, push the images. Either
+    * with Docker Compose: `docker compose push`
+    * or with Docker, e.g. `docker push europe-west9-docker.pkg.dev/your-gcp-project/voting-image/result`
+
+
+## Mandatory version
+
+Deploy a working application (with temporary database store)
+
+* `vote`, `result`, `redis` and `db`, each with a `Deployment` and a `Service`.
+* `worker` only needs a `Deployment`.
+* `seed` is only a `Pod` that is *not restarted*.
+
+## Optional extension: Persistent data on `db`
+
+* Use a `PersistentVolumeClaim`.
+  * In the corresponding `Deployment`, under `volumeMounts`, there should be `subPath: data`.
+
+
