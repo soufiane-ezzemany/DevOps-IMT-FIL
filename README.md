@@ -178,7 +178,7 @@ Note that this command can be found in the "Setup Instructions" button in the re
 
 Afficher la liste des resources que l'on peut déclarer dans un manifeste (`apiVersion` et `kind`)
 
-    kubectl api-version
+    kubectl api-resources
 
 
 Afficher la documentation d'une resource, i.e. les propriétés acceptées dans un manifeste
