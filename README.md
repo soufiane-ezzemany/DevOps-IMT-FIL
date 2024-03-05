@@ -126,7 +126,7 @@ Then in the Dockerfile:
 
 The goal of this project is to deploy the previous application to a Kubernetes cluster. Here is a diagram of the expected infrastructure.
 
-![image](login-nuage-voting-k8s.drawio.svg)
+<!-- ![image](login-nuage-voting-k8s.drawio.svg) -->
 
 ## Preliminary phase: push your Docker images into a GCP container registry
 
@@ -162,15 +162,13 @@ Note that this command can be found in the "Setup Instructions" button in the re
 
 ## Mandatory version
 
-Deploy a working application (with temporary database store)
+<!-- Deploy a working application (with temporary database store) -->
 
-* `vote`, `result`, `redis` and `db`, each with a `Deployment` and a `Service`.
-* `worker` only needs a `Deployment`.
-* `seed` is only a `Pod` that is *not restarted*.
+<!-- * `vote`, `result`, `redis` and `db`, each with a `Deployment` and a `Service`. -->
+<!-- * `worker` only needs a `Deployment`. -->
+<!-- * `seed` is only a `Pod` that is *not restarted*. -->
 
 ## Optional extension: Persistent data on `db`
 
-* Use a `PersistentVolumeClaim`.
-  * In the corresponding `Deployment`, under `volumeMounts`, there should be `subPath: data`.
-
-
+<!-- * Use a `PersistentVolumeClaim`. -->
+<!--   * In the corresponding `Deployment`, under `volumeMounts`, there should be `subPath: data`. -->
