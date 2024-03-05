@@ -172,3 +172,40 @@ Note that this command can be found in the "Setup Instructions" button in the re
 
 <!-- * Use a `PersistentVolumeClaim`. -->
 <!--   * In the corresponding `Deployment`, under `volumeMounts`, there should be `subPath: data`. -->
+
+
+# Annexe: Commandes `kubectl` utiles
+
+Afficher la liste des resources que l'on peut déclarer dans un manifeste (`apiVersion` et `kind`)
+
+    kubectl api-version
+
+
+Afficher la documentation d'une resource, i.e. les propriétés acceptées dans un manifeste
+
+    kubectl explain pod.spec.containers.livenessProbe.httpGet
+
+
+Afficher les logs d'un pod/conteneur en continue (`-f`)
+
+    kubectl logs -f pods/vote<TAB>
+
+
+Appliquer d'un seul coup tous les manifestes d'un répertoire.
+
+    kubectl apply -f k8s-manifests/
+
+
+Voir la météo du cluster en continue. Attention `all` ne signifie pas *toutes* les resources, seulement celles "utilisateurs", notamment les `StorageClass`es ne sont pas concernées.
+
+    watch -n1 kubectl get all
+
+
+Exécuter une commande dans un conteneur. E.g. dump la table `votes` de Postgres
+
+    kubectl exec pods/db<TAB> -- pg_dump -U postgres -t public/votes
+
+
+Pour les commandes qui manipulent des resources, l'option `-l` applique la commande uniquement sur les resources ayant les `labels` spécifiés. E.g. pour supprimer toutes les resources liés à l'application `vote` (celles qui ont `metadata.labels.app = vote`)
+
+    kubectl delete all -lapp=vote
