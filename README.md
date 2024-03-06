@@ -159,20 +159,29 @@ Note that this command can be found in the "Setup Instructions" button in the re
     * with Docker Compose: `docker compose push`
     * or with Docker, e.g. `docker push europe-west9-docker.pkg.dev/your-gcp-project/voting-image/result`
 
-
 ## Mandatory version
 
-<!-- Deploy a working application (with temporary database store) -->
+<!-- -->
 
-<!-- * `vote`, `result`, `redis` and `db`, each with a `Deployment` and a `Service`. -->
-<!-- * `worker` only needs a `Deployment`. -->
-<!-- * `seed` is only a `Pod` that is *not restarted*. -->
+Deploy a working application (with temporary database store)
 
-## Optional extension: Persistent data on `db`
+* `vote`, `result`, `redis` and `db`, each with a `Deployment` and a `Service`.
+* `worker` only needs a `Deployment`.
+* `seed` will be run as a `Job` that is *not restarted*.
 
-<!-- * Use a `PersistentVolumeClaim`. -->
-<!--   * In the corresponding `Deployment`, under `volumeMounts`, there should be `subPath: data`. -->
+## Optional extensions
 
+The two extensions are independent.
+
+1. Make the data of the `db` persist even if the associated pod is deleted.
+    * Use a `PersistentVolumeClaim`.
+    * In the corresponding `Deployment`, under `volumeMounts`, there should be `subPath: data`.
+
+1. Add `livenessProbe`s to reflect the `healthchecks` of last week's Docker project.
+    * `result` and `vote` use the `httpGet` probe.
+    * `redis` and `db` use the `exec` probe to run the `healthchecks/{redis.sh,postgres}.sh` scripts.
+
+<!-- -->
 
 ## Appendix: Useful commands
 
@@ -183,7 +192,7 @@ Print the list of resources we can declare in a manifest, i.e. available values 
 
 Print the documentation of a resource, i.e. the accepted fields in the manifest
 
-    kubectl explain pod.spec.containers.livenessProbe.httpGet
+    kubectl explain deployment.spec.template.spec.containers.livenessProbe
 
 
 Print the logs of a container. When selecting a pod, `kubectl` will choose one. The `-f` options means "follow", i.e. print the logs continuously, akin to the Linux `tail -f` command.
@@ -196,7 +205,7 @@ Apply *all* manifests of a repository
     kubectl apply -f k8s-manifests/
 
 
-Show resources continuously (refreshed every one second) with `watch`. Beware, `all` do not mean *all* resources, only "user" resources. E.g. `StorageClass`es are not in showed.
+Show resources continuously (refreshed every one second) with `watch`. Beware, `all` do not mean *all* resources, only "user" resources. E.g. `PersistentVolume`s and `StorageClass`es are not showed.
 
     watch -n1 kubectl get all
 
