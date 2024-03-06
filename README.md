@@ -164,6 +164,15 @@ Note that this command can be found in the "Setup Instructions" button in the re
     * with Docker Compose: `docker compose push`
     * or with Docker, e.g. `docker push europe-west9-docker.pkg.dev/your-gcp-project/voting-image/result`
 
+
+* In case you struggle making this work, you can use our public images from Docker Hub during the session (not in the repo you will send us).
+  The tags are, e.g. for the `result` image
+
+        eloip13009/result
+
+You will notice that for the `seed` image, the public version only sends a total of 300 votes, instead of 3000 previously.
+
+
 ## Mandatory version
 
 <!-- -->
