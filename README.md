@@ -174,38 +174,38 @@ Note that this command can be found in the "Setup Instructions" button in the re
 <!--   * In the corresponding `Deployment`, under `volumeMounts`, there should be `subPath: data`. -->
 
 
-# Annexe: Commandes `kubectl` utiles
+## Appendix: Useful commands
 
-Afficher la liste des resources que l'on peut déclarer dans un manifeste (`apiVersion` et `kind`)
+Print the list of resources we can declare in a manifest, i.e. available values of `apiVersion` and `kind`
 
     kubectl api-resources
 
 
-Afficher la documentation d'une resource, i.e. les propriétés acceptées dans un manifeste
+Print the documentation of a resource, i.e. the accepted fields in the manifest
 
     kubectl explain pod.spec.containers.livenessProbe.httpGet
 
 
-Afficher les logs d'un pod/conteneur en continue (`-f`)
+Print the logs of a container. When selecting a pod, `kubectl` will choose one. The `-f` options means "follow", i.e. print the logs continuously, akin to the Linux `tail -f` command.
 
     kubectl logs -f pods/vote<TAB>
 
 
-Appliquer d'un seul coup tous les manifestes d'un répertoire.
+Apply *all* manifests of a repository
 
     kubectl apply -f k8s-manifests/
 
 
-Voir la météo du cluster en continue. Attention `all` ne signifie pas *toutes* les resources, seulement celles "utilisateurs", notamment les `StorageClass`es ne sont pas concernées.
+Show resources continuously (refreshed every one second) with `watch`. Beware, `all` do not mean *all* resources, only "user" resources. E.g. `StorageClass`es are not in showed.
 
     watch -n1 kubectl get all
 
 
-Exécuter une commande dans un conteneur. E.g. dump la table `votes` de Postgres
+Execute a command in a container. E.g. dump the `votes` table in the Postgres pod.
 
     kubectl exec pods/db<TAB> -- pg_dump -U postgres -t public/votes
 
 
-Pour les commandes qui manipulent des resources, l'option `-l` applique la commande uniquement sur les resources ayant les `labels` spécifiés. E.g. pour supprimer toutes les resources liés à l'application `vote` (celles qui ont `metadata.labels.app = vote`)
+For commands that handle resources, the `-l` option applies it on resources holding the specified `labels`. E.g. to delete all resources related to the voting app (those with `metadata.labels.app = vote`)
 
     kubectl delete all -lapp=vote
