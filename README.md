@@ -166,11 +166,10 @@ Note that this command can be found in the "Setup Instructions" button in the re
 
 
 * In case you struggle making this work, you can use our public images from Docker Hub during the session (not in the repo you will send us).
-  The tags are, e.g. for the `result` image
+  The tags are prefixed with `eloip13009`, for example `eloip13009/result`.
+  The suffixes are `vote`, `result`, `worker`, `seed-data`, `postgres-hs` and `redis-hs`.
 
-        eloip13009/result
-
-You will notice that for the `seed` image, the public version only sends a total of 300 votes, instead of 3000 previously.
+You will notice that for the `seed-data` image, the public version only sends a total of 300 votes, instead of 3000 previously.
 
 
 ## Mandatory version
