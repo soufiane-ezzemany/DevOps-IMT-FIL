@@ -131,7 +131,7 @@ Then in the Dockerfile:
 
 The goal of this project is to deploy the previous application to a Kubernetes cluster. Here is a diagram of the expected infrastructure.
 
-<!-- ![image](login-nuage-voting-k8s.drawio.svg) -->
+![image](login-nuage-voting-k8s.drawio.svg)
 
 ## Preliminary phase: push your Docker images into a GCP container registry
 
