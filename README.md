@@ -326,3 +326,15 @@ Then, look for the line with `requirepass`, remove the comment and change the pa
 
 Ideally, this last configuration would be done in the cloud-init script, using `sed` for example.
 
+## Destroy everything
+
+To keep some credits, make sure you execute `terraform destroy`.
+
+There is a surprise here: GKE clusters cannot be destroyed by default, we need to modify the state by hand to tell terraform it is OK to delete it.
+
+Open `terraform.tfstate`, look for the property `deletion_protection` and set its value to `false`.
+
+Alternatively, use `sed`:
+```
+    sed -e '/deletion_protection/s/true/false/' -i terraform.tfstate
+```
