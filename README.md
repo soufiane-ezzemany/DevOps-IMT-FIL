@@ -235,4 +235,94 @@ For commands that handle resources, the `-l` option applies it on resources hold
 
 # Terraform project
 
+## Objectives
+
+The objective is to use Terraform to deploy the voting app.
+
+The tutorial on Terraform did not give you _all_ elements for this project: it was on purpose.
+The point is for you to learn how to seek information in providers and other documentations.
+But most elements in the tutorials can be directly applied.
+
+Different levels are possible, the more advancement you make the better. **Part 1 and Part 2 are mandatory.**
+
+## Framework
+
+  - You will do this project with the same coworkers than the previously.
+  - You will deliver us a GitHub link with your Terraform codes. As seen in the course, it is good practice to version your infrastructure code. Set up a pull request mechanism.
+  - Bonus points can be given if you set up GitHun Actions to automate your infrastructure (CI/CD equivalent).
+
+
+## Part 1 mandatory - Docker
+
+In this first part, you must write code that deploys the application with the Terraform Docker provider.
+The app will thus be deployed locally inside containers on your machine.
+
+TIP: start from your previous `docker-compose.yml`.
+
+## Part 2 mandatory - GKE and Kubernetes
+
+In this second part, you must write code that deploys the application onto a Kubernetes cluster provisioned with Terraform on GKE.
+Google and Kubernetes providers will be thus be used.
+
+TIP: you can start form GKE and Kubernetes tutorials and adapt the manifests.
+
+IMPORTANT: Make sure to organize your Terraform code well. Attention will be given to your organization (modules, directories, files)
+
+## Part 3 optional - GKE, Kubernetes and OpenStack
+
+In this last part, you must deploy with Terraform the `Redis` database inside a VM on the school's OpenStack platform.
+This database must then communicate with the other components of the application located on the GKE cluster.
+
+### Changes to make this work
+
+By default, Redis is supposed to be used only locally and does not have a password.
+You must thus modify the application code that uses Redis so that they connect with a password.
+
+#### Inside `vote/app.py`
+
+On line 21, change
+```
+    g.redis = Redis(host="redis", db=0, socket_timeout=5)
+```
+to
+```
+    g.redis = Redis(host="redis", password=redis_pw, db=0, socket_timeout=5)
+```
+
+#### Inside `worker/Program.cs`
+
+On line 116, change
+```
+    return ConnectionMultiplexer.Connect(ipAddress);
+```
+to
+```
+  return ConnectionMultiplexer.Connect("redis,password=changeit0");
+```
+
+#### cloud-init script to install Redis on a VM
+
+Use this script as in cloud-init to install Redis.
+```
+  #!/usr/bin/env bash
+
+  DEBIAN_FRONTEND=noninteractive apt update -q
+  DEBIAN_FRONTEND=noninteractive apt install -q -y redis
+```
+
+#### Redis configuration
+
+Finally we need to configure Redis to allow external connections with a password from the outside.
+
+Connect to your VM in SSH, open open the file `/etc/redis/redis.conf`, find the uncommented `bind` line and replace it with
+```
+  bind 0.0.0.0
+```
+
+Then, look for the line with `requirepass`, remove the comment and change the password:
+```
+  requirepass XYZ
+```
+
+Ideally, this last configuration would be done in the cloud-init script, using `sed` for example.
 
