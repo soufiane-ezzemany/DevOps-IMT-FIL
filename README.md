@@ -245,28 +245,21 @@ But most elements in the tutorials can be directly applied.
 
 Different levels are possible, the more advancement you make the better. **Part 1 and Part 2 are mandatory.**
 
-## Framework
-
-  - You will do this project with the same coworkers than the previously.
-  - You will deliver us a GitHub link with your Terraform codes. As seen in the course, it is good practice to version your infrastructure code. Set up a pull request mechanism.
-  - Bonus points can be given if you set up GitHun Actions to automate your infrastructure (CI/CD equivalent).
-
-
 ## Part 1 mandatory - Docker
 
 In this first part, you must write code that deploys the application with the Terraform Docker provider.
 The app will thus be deployed locally inside containers on your machine.
 
-TIP: start from your previous `docker-compose.yml`.
+**TIP**: start from your previous `docker-compose.yml`.
 
 ## Part 2 mandatory - GKE and Kubernetes
 
 In this second part, you must write code that deploys the application onto a Kubernetes cluster provisioned with Terraform on GKE.
 Google and Kubernetes providers will be thus be used.
 
-TIP: you can start form GKE and Kubernetes tutorials and adapt the manifests.
+**TIP**: you can start form the GKE tutorial and from your previous Kubernetes manifests.
 
-IMPORTANT: Make sure to organize your Terraform code well. Attention will be given to your organization (modules, directories, files)
+**IMPORTANT**: Make sure to organize your Terraform code well. Attention will be given to your organization (modules, directories, files)
 
 ## Part 3 optional - GKE, Kubernetes and OpenStack
 
