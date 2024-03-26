@@ -2,6 +2,7 @@
 
   * [Docker project](#docker-project)
   * [Kubernetes project](#kubernetes-project)
+  * [Terraform project](#terraform-project)
 
 # Docker project
 
@@ -231,3 +232,7 @@ Execute a command in a container. E.g. dump the `votes` table in the Postgres po
 For commands that handle resources, the `-l` option applies it on resources holding the specified `labels`. E.g. to delete all resources related to the voting app (those with `metadata.labels.app = vote`)
 
     kubectl delete all -lapp=vote
+
+# Terraform project
+
+
