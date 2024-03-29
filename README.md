@@ -288,7 +288,7 @@ On line 21, change
 ```
 to
 ```
-    g.redis = Redis(host="redis", password=redis_pw, db=0, socket_timeout=5)
+    g.redis = Redis(host="redis", password="osef", db=0, socket_timeout=5)
 ```
 
 #### Inside `worker/Program.cs`
@@ -299,34 +299,23 @@ On line 116, change
 ```
 to
 ```
-  return ConnectionMultiplexer.Connect("redis,password=changeit0");
+    return ConnectionMultiplexer.Connect("redis,password=osef");
 ```
 
 #### cloud-init script to install Redis on a VM
 
 Use this script as in cloud-init to install Redis.
 ```
-  #!/usr/bin/env bash
+#!/usr/bin/env bash
+#
+# Install and configure Redis
 
-  DEBIAN_FRONTEND=noninteractive apt update -q
-  DEBIAN_FRONTEND=noninteractive apt install -q -y redis
+DEBIAN_FRONTEND=noninteractive apt update -q
+DEBIAN_FRONTEND=noninteractive apt install -q -y redis
+
+sed -e '/^bind/s/bind.*/bind 0.0.0.0/' -i /etc/redis/redis.conf
+sed -e '/# requirepass/s/.*/requirepass osef/' -i /etc/redis/redis.conf
 ```
-
-#### Redis configuration
-
-Finally we need to configure Redis to allow external connections with a password from the outside.
-
-Connect to your VM in SSH, open open the file `/etc/redis/redis.conf`, find the uncommented `bind` line and replace it with
-```
-  bind 0.0.0.0
-```
-
-Then, look for the line with `requirepass`, remove the comment and change the password:
-```
-  requirepass XYZ
-```
-
-Ideally, this last configuration would be done in the cloud-init script, using `sed` for example.
 
 ## Destroy everything
 
