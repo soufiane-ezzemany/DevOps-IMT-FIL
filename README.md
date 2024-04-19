@@ -36,6 +36,7 @@ For building purposes, it is good practice to use a `slim` version of the image.
 This is a Python web server using the Flask framework. It presents a front-end for the user to submit their votes, then write them into the Redis key-value store.
 
 For building the Dockerfile, before starting `app.py`:
+- use the base image `python:3.11-slim`
 - requirements have to be copied and installed in the container
 - all necessary files and directories have to be copied in the container
 
@@ -48,6 +49,8 @@ Healthcheck:
 ### `result` service
 
 This is a Node.js web server. The front-end presents the results of the votes. The result values are taken from the PostgreSQL database.
+
+Use the base image `node:18-slim`
 
 In the Dockerfile, before running the code, make the working directory to `/usr/local/app` and
 - copy package files into the container,
@@ -66,6 +69,8 @@ Finally, run the code with `node server.js`.
 ### `seed` service
 
 This is a Python and bash program used to virtually send many vote requests to the `vote` server.
+
+Use the base image `python:3.9-slim`
 
 First the file `make-data.py` has to be executed in the container. Second, the file `generate-votes.sh` has to be executed when starting the container.
 
@@ -96,6 +101,8 @@ For the multistage build, use this image: `mcr.microsoft.com/dotnet/runtime:7.0`
 
 This is a simple Redis service. Redis is a NOSQL database software focused on availability used for storing large volumes of data-structures (typically key-value pairs).
 
+use the base image `redis:alpine`
+
 In order to perform healthchecks while Redis is running, there must be a volume attached to the container. You will need to mount local the repo directory `./healthchecks/` into the `/healthchecks/` directory of the container.
 
 The check is done by executing the `redis.sh` script.
@@ -105,6 +112,8 @@ The check is done by executing the `redis.sh` script.
 
 This is a simple PostgreSQL service.
 
+Use the base image `postgres:15-alpine`
+
 The same logic applies for healthchecks, mount a volume, use `postgres.sh` for running checks.
 
 Moreover, in order to persist the data that comes from the votes, you need to create a Docker volume and attach it to the container.
@@ -113,6 +122,8 @@ The volume will be named `db-data` and attached to the `/var/lib/postgresql/data
 ### Nginx loadbalancer service
 
 This is a simple Nginx service. At its core, Nginx is a web-server but it can also be used for other purposes such as loadbalancing, HTTP cache, reverse proxy, etc.
+
+Use the base image `nginx`.
 
 To configure Nginx as a loadbalancer (LB), you first need to edit accordingly the `./nginx/nginx.conf` file from this repo.
 Then in the Dockerfile:
