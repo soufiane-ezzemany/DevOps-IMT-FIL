@@ -146,7 +146,7 @@ The goal of this project is to deploy the previous application to a Kubernetes c
 ## Preliminary phase: push your Docker images into a GCP container registry
 
 1. In the GCP dashboard, go to *Artifact Registry* and create a *Repository*.
-Give it a name e.g. `voting-images`, and a *region* e.g. `europe-west9`.
+Give it a name e.g. `voting-image`, and a *region* e.g. `europe-west9`.
 Once created, inspect the repository and copy its path, it should look something like `europe-west9-docker.pkg.dev/your-gcp-project/voting-image`.
 
 1. Before pushing to the registry, issue the following command in order to authenticate your laptop to the registry:
