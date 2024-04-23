@@ -190,19 +190,20 @@ Deploy a working application (with temporary database store)
 
 * `vote`, `result`, `redis` and `db`, each with a `Deployment` and a `Service`.
 * `worker` only needs a `Deployment`.
+* Make the data of the `db` persist even if the associated pod is deleted
+    - Use a `PersistentVolumeClaim`
+    - In the corresponding `Deployment`, under `volumeMounts`, there should be `subPath: data`
 * `seed` will be run as a `Job` that is *not restarted*.
 
 ## Optional extensions
 
 The two extensions are independent.
 
-1. Make the data of the `db` persist even if the associated pod is deleted.
-    * Use a `PersistentVolumeClaim`.
-    * In the corresponding `Deployment`, under `volumeMounts`, there should be `subPath: data`.
-
 1. Add `livenessProbe`s to reflect the `healthchecks` of last week's Docker project.
     * `result` and `vote` use the `httpGet` probe.
     * `redis` and `db` use the `exec` probe to run the `healthchecks/{redis.sh,postgres}.sh` scripts.
+2. Use a `ConfigMap` to pass environment variables to your pods
+3. Use an `HorizontalPodAutoscaler` to automatically scale the number of replicas for `vote`
 
 <!-- -->
 
