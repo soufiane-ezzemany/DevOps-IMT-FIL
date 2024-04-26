@@ -83,7 +83,7 @@ This is a .NET (C#) program that reads vote submissions from Redis store, comput
 It requires a little bit more work to compile and run:
 - use this as a base image
 ```
-mcr.microsoft.com/dotnet/sdk:7.0
+mcr.microsoft.com/dotnet/sdk:8.0
 ```
   with the argument `--platform=${BUILDPLATFORM}`
 - use `ARG` to define build arguments `TARGETPLATFORM`, `TARGETARCH` and `BUILDPLATFORM`. Print their values with `echo`.
@@ -94,7 +94,7 @@ dotnet publish -c release -o /app -a $TARGETARCH --self-contained false --no-res
 ```
 The application will be built inside the `/app` directory, launch with `dotnet Worker.dll`.
 
-For the multistage build, use this image: `mcr.microsoft.com/dotnet/runtime:7.0`.
+For the multistage build, use this image: `mcr.microsoft.com/dotnet/runtime:8.0`.
 
 
 ### Redis service
