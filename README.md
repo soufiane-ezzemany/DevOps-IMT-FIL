@@ -206,8 +206,8 @@ The two extensions are independent.
     * `redis` and `db` use the `exec` probe to run the `healthchecks/{redis.sh,postgres}.sh` scripts.
         - TIP: You have to think about the type of volumes to use in this case
 2. Use a `ConfigMap` to pass environment variables to your pods
-    2.1 create the `ConfigMap` with a mnually created manifest
-    2.2 use `Kustomize` to generate the `ConfigMap` 
+    1. create the `ConfigMap` with a manually created manifest
+    2. use `Kustomize` to generate the `ConfigMap` 
 3. Use an `HorizontalPodAutoscaler` to automatically scale the number of replicas for `vote`
 
 <!-- -->
