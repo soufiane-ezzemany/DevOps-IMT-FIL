@@ -250,6 +250,8 @@ For commands that handle resources, the `-l` option applies it on resources hold
 
 # Terraform project
 
+**WARNING!!!! For FISE LOGIN only! (not FIL A2)**
+
 ## Objectives
 
 The objective is to use Terraform to deploy the voting app.
