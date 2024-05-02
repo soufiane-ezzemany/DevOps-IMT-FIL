@@ -251,7 +251,7 @@ For commands that handle resources, the `-l` option applies it on resources hold
 
 # Ansible project
 
-See the dedicated website at https://ue-devops-fila2.gitlab-pages.imt-atlantique.fr/.
+See the dedicated website at https://ue-devops-fila2.gitlab-pages.imt-atlantique.fr/cours-ansible-voting-app/docs/1-intro/1-infra-hybride/.
 
 # Terraform project
 
