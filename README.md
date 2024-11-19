@@ -342,3 +342,9 @@ Alternatively, use `sed`:
 ```
     sed -e '/deletion_protection/s/true/false/' -i terraform.tfstate
 ```
+
+### Améliorations
+
+* Faire un du script d'install redis un template pour passer le mot de passe en paramètre. Adaptez le `.tf`.
+* À partir du template `redis_endpointslice.yaml` qui configure une IP `endpoint_ip` de la BDD Redis externe. Adaptez le .tf
+
