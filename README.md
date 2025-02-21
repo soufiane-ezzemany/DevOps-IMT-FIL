@@ -42,7 +42,7 @@ For building the Dockerfile, before starting `app.py`:
 - all necessary files and directories have to be copied in the container
 
 Port mapping:
-`5000` is used inside the container (see Python code). Each instance of vote will use the external port `500x` where `x` is the instance number
+`5000` is used inside the container (see Python code). No port has to be exposed as the Nginx service is the entry point.
 
 Healthcheck:
 
@@ -143,8 +143,6 @@ Then in the Dockerfile:
 # Kubernetes project
 
 The goal of this project is to deploy the previous application to a Kubernetes cluster. 
-
-![image](login-nuage-voting-k8s.drawio.svg )
 
 ## Preliminary phase: push your Docker images into a GCP container registry
 
