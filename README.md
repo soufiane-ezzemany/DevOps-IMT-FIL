@@ -205,7 +205,7 @@ The two extensions are independent.
 1. Add `livenessProbe`s to reflect the `healthchecks` of last week's Docker project.
     * `result` and `vote` use the `httpGet` probe.
     * `redis` and `db` use the `exec` probe to run the `healthchecks/{redis.sh,postgres}.sh` scripts.
-        - TIP: You have to think about the type of volumes to use in this case
+        - TIP: You have to create an image for redis and postgres with sh files included, or better use an init container to get [healthchecks files](https://gitlab.imt-atlantique.fr/login-nuage/healthchecks/) inside a shared volume [see this page](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)
 2. Use a `ConfigMap` to pass environment variables to your pods
     1. create the `ConfigMap` with a manually created manifest
     2. use `Kustomize` to generate the `ConfigMap` 
