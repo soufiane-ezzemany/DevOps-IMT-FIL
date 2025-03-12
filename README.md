@@ -144,6 +144,8 @@ Then in the Dockerfile:
 
 The goal of this project is to deploy the previous application to a Kubernetes cluster. 
 
+![image](login-nuage-voting-k8s.drawio.svg)
+
 ## Preliminary phase: push your Docker images into a GCP container registry
 
 1. In the GCP dashboard, go to *Artifact Registry* and create a *Repository*.
