@@ -58,6 +58,8 @@ services:
 
   result:
     build: ./result
+    ports:
+      - "3000:3000"
     networks:
       - front-tier
       - back-tier
@@ -75,13 +77,24 @@ services:
       db:
         condition: service_healthy
 
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    networks:
+      - front-tier
+    depends_on:
+      - vote1
+      - vote2
+
   seed:
     build: ./seed-data
     networks:
-      - back-tier
+      - front-tier
     depends_on:
       db:
         condition: service_healthy
+
 
 volumes:
   db-data:
