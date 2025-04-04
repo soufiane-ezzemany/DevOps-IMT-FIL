@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./healthchecks:/healthchecks
+    networks:
+      - back-tier
+    healthcheck:
+      test: ["CMD-SHELL", "/healthchecks/postgres.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - ./healthchecks:/healthchecks
+    healthcheck:
+      test: ["CMD", "/healthchecks/redis.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - back-tier
+    
+  vote:
+    build: ./vote
+    environment:
+      - OPTION_A=Cats
+      - OPTION_B=Dogs
+    networks:
+      - front-tier
+      - back-tier
+
+volumes:
+  db-data:
+
+networks:
+  back-tier:
+    name: back-tier
+  front-tier:
+    name: front-tier
