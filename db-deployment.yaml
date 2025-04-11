@@ -1,3 +1,26 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: db-pv
+spec:
+  capacity:
+    storage: 1Gi  # Specify the size of the volume
+  accessModes:
+    - ReadWriteOnce  # Allows read-write access by a single node
+  hostPath:
+    path: /mnt/data  # Path on the node (use appropriate path for your environment)
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Size should match PersistentVolume size or be less
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,6 +47,14 @@ spec:
           value: "postgres"
         ports:
         - containerPort: 5432
+        volumeMounts:
+        - name: db-storage
+          mountPath: /var/lib/postgresql/data  # Default data directory for PostgreSQL
+          subPath: data  # Mount only the "data" directory
+      volumes:
+      - name: db-storage
+        persistentVolumeClaim:
+          claimName: db-pvc  # Link the PVC to this volume
 ---
 apiVersion: v1
 kind: Service
@@ -34,4 +65,4 @@ spec:
   - port: 5432
     targetPort: 5432
   selector:
-    app: db 
+    app: db
