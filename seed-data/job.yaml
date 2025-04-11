@@ -9,6 +9,5 @@ spec:
         - name: seed
           image: seed:latest
           imagePullPolicy: Never
-          command: ["bash", "generate-votes.sh"]
       restartPolicy: Never
   backoffLimit: 4
