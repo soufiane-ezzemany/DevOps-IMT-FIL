@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seed
+spec:
+  template:
+    spec:
+      containers:
+        - name: seed
+          image: seed:latest
+          imagePullPolicy: Never
+          command: ["bash", "generate-votes.sh"]
+      restartPolicy: Never
+  backoffLimit: 4
