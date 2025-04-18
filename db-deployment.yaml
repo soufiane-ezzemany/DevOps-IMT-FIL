@@ -4,11 +4,11 @@ metadata:
   name: db-pv
 spec:
   capacity:
-    storage: 1Gi  # Specify the size of the volume
+    storage: 1Gi
   accessModes:
-    - ReadWriteOnce  # Allows read-write access by a single node
+    - ReadWriteOnce
   hostPath:
-    path: /mnt/data  # Path on the node (use appropriate path for your environment)
+    path: /mnt/data  # For Minikube, this is fine
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -19,7 +19,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi  # Size should match PersistentVolume size or be less
+      storage: 1Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -35,26 +35,47 @@ spec:
       labels:
         app: db
     spec:
-      containers:
-      - name: postgres
-        image: postgres:15-alpine
-        env:
-        - name: POSTGRES_USER
-          value: "postgres"
-        - name: POSTGRES_PASSWORD
-          value: "postgres"
-        - name: POSTGRES_DB
-          value: "postgres"
-        ports:
-        - containerPort: 5432
-        volumeMounts:
-        - name: db-storage
-          mountPath: /var/lib/postgresql/data  # Default data directory for PostgreSQL
-          subPath: data  # Mount only the "data" directory
       volumes:
-      - name: db-storage
-        persistentVolumeClaim:
-          claimName: db-pvc  # Link the PVC to this volume
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: db-pvc
+        - name: health-scripts
+          emptyDir: {}
+      initContainers:
+        - name: clone-healthchecks
+          image: alpine/git
+          command:
+            - /bin/sh
+            - -c
+            - |
+              git clone https://gitlab.imt-atlantique.fr/login-nuage/healthchecks.git /repo && \
+              cp /repo/postgres.sh /healthchecks/postgres.sh && chmod +x /healthchecks/postgres.sh
+          volumeMounts:
+            - name: health-scripts
+              mountPath: /healthchecks
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+            - name: POSTGRES_DB
+              value: "postgres"
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: db-storage
+              mountPath: /var/lib/postgresql/data
+              subPath: data
+            - name: health-scripts
+              mountPath: /healthchecks
+          livenessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "/healthchecks/postgres.sh"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
@@ -62,7 +83,7 @@ metadata:
   name: db
 spec:
   ports:
-  - port: 5432
-    targetPort: 5432
+    - port: 5432
+      targetPort: 5432
   selector:
     app: db
