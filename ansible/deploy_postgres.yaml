@@ -1,0 +1,8 @@
+- name: Deploy PostgreSQL
+  hosts: vm1
+  vars:
+    db_user: postgres
+    db_password: postgres
+  become: yes
+  roles:
+    - pg_install

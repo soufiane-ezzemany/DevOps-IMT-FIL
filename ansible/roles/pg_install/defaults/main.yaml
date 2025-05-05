@@ -1,0 +1,7 @@
+# PostgreSQL database configuration
+pg_version: "15"
+pg_service_name: "postgresql@{{ pg_version }}-main"
+pg_db_name: "postgres"
+pg_user: "postgres"
+pg_password: "postgres"
+pg_listen_address: "0.0.0.0"

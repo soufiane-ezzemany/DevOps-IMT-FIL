@@ -1,0 +1,85 @@
+- name: Update APT cache
+  apt:
+    update_cache: yes
+  become: yes
+
+- name: Install PostgreSQL packages
+  apt:
+    name:
+      - postgresql-15
+      - python3-psycopg2
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Start the PostgreSQL service
+  service:
+    name: postgresql@15-main
+    state: started
+    enabled: true
+  become: true
+
+- name: Create the 'postgres' database
+  community.postgresql.postgresql_db:
+    name: postgres
+    state: present
+    login_user: postgres
+  become: true
+  become_user: postgres
+
+- name: Create the '{{ db_user }}' user
+  community.postgresql.postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    state: present
+    login_user: postgres
+  become: true
+  become_user: postgres
+
+- name: Grant privileges to the '{{ db_user }}' user
+  community.postgresql.postgresql_privs:
+    database: postgres
+    roles: "{{ db_user }}"
+    type: database
+    privs: all
+    state: present
+    login_user: postgres
+  become: true
+  become_user: postgres
+
+- name: Get path to pg_hba.conf
+  community.postgresql.postgresql_query:
+    query: "SHOW hba_file;"
+    db: postgres
+    login_user: postgres
+  register: hba_result
+  become: true
+  become_user: postgres
+
+- name: Set pg_hba.conf path variable
+  set_fact:
+    pg_hba_file: "{{ hba_result.query_result[0].hba_file }}"
+
+- name: Debug path to pg_hba.conf
+  debug:
+    var: pg_hba_file
+
+- name: Configure pg_hba.conf to allow '{{ db_user }}' connection
+  community.postgresql.postgresql_pg_hba:
+    dest: "{{ pg_hba_file }}"
+    contype: host
+    databases: all
+    users: "{{ db_user }}"
+    address: all
+    method: md5
+  become: true
+  become_user: postgres
+  notify: Restart PostgreSQL
+
+- name: Set listen_addresses to allow external connections
+  community.postgresql.postgresql_set:
+    name: listen_addresses
+    value: "0.0.0.0"
+  become: true
+  become_user: postgres
+  notify: Restart PostgreSQL
