@@ -1,0 +1,31 @@
+- name: Backup de la base de données PostgreSQL
+  hosts: vm1
+  become: true
+  vars:
+    db_name: "postgres"
+    backup_dir: "/tmp/db_backups"
+    local_backup_dir: "./backups"
+    dump_file: "{{ backup_dir }}/{{ db_name }}.sql"
+
+  tasks:
+    - name: Créer le répertoire de backup sur la machine distante
+      file:
+        path: "{{ backup_dir }}"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0755'
+
+    - name: Créer le backup
+      community.postgresql.postgresql_db:
+        state: dump
+        name: "{{ db_name }}"
+        target: "{{ dump_file }}"
+      become: true
+      become_user: postgres
+
+    - name: Rapatrier le fichier de backup sur l'ordinateur local
+      fetch:
+        src: "{{ dump_file }}"
+        dest: "{{ local_backup_dir }}/"
+        flat: yes

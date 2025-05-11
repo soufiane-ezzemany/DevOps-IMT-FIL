@@ -1,7 +1,7 @@
 all:
   hosts:
     vm1:
-      ansible_host: 10.129.177.230
+      ansible_host: 10.129.178.21
       ansible_user: root
       ansible_port: 22
-      ansible_password: "Soufiane12@"
+      ansible_password: "password"

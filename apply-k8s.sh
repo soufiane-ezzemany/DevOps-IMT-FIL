@@ -39,5 +39,7 @@ kubectl apply -f result/service.yaml
 echo "Applying seed job..."
 kubectl apply -f seed-data/job.yaml
 
+minikube tunnel
+
 
 echo "All manifests have been applied successfully!"
