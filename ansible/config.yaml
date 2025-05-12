@@ -1,0 +1,25 @@
+---
+- name: Configuration système et PostgreSQL (shared buffers)
+  hosts: vm1
+  become: yes
+
+  tasks:
+    - name: Modification de la gestion du cache de la VM
+      ansible.posix.sysctl:
+        name: vm.vfs_cache_pressure
+        value: "90"
+        sysctl_set: yes
+        state: present
+
+    - name: Shared buffers alloués dynamiquement par rapport à la mémoire de la VM
+      community.postgresql.postgresql_set:
+        name: shared_buffers
+        value: "{{ ((ansible_memtotal_mb * 0.15) | int) if ansible_memtotal_mb <= 1024 else ((ansible_memtotal_mb * 0.25) | int) }}MB"
+      notify: restart postgresql
+      become_user: postgres
+
+  handlers:
+    - name: restart postgresql
+      service:
+        name: postgresql@15-main
+        state: restarted
