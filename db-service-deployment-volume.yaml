@@ -8,7 +8,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /mnt/data  # For Minikube, this is fine
+    path: /mnt/data
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
