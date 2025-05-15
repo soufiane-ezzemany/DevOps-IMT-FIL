@@ -1,350 +1,216 @@
-# Table of Content
+# Docker Voting Application
 
-  * [Docker project](#docker-project)
-  * [Kubernetes project](#kubernetes-project)
-  * [Ansible project](#ansible-project)
-  * [Terraform project](#terraform-project)
+Ce projet implémente une application de vote en utilisant Docker et Docker Compose.
 
-# Docker project
+## Architecture
 
-The goal of the project is to deploy the following application by using Docker and Docker compose. You will give us a GitHub or Gitlab link for your project.
+L'application est composée des services suivants :
+- **vote1 & vote2** : Interfaces web Python (Flask) permettant aux utilisateurs de voter
+- **redis** : Base de données NoSQL pour stocker les votes
+- **worker** : Service .NET qui traite les votes et les enregistre dans la base de données
+- **db** : Base de données PostgreSQL pour stocker les résultats
+- **result** : Interface web Node.js affichant les résultats des votes
+- **nginx** : Répartiteur de charge qui distribue les requêtes entre les services vote1 et vote2
+- **seed** : Service d'injection de données pour simuler des votes
 
-![image](login-nuage-voting.drawio.svg)
+## Réseaux
 
-## Mandatory version
-- one Dockerfile per service that exposes the internal port of the container
-- one docker-compose.yml file to deploy the stack
-- adequate `depends_on`
-- two networks will be defined: `front-net` and `back-net`
-- a README file explaining how to configure and deploy the stack
+L'application utilise deux réseaux Docker distincts :
+- **back-tier** : Réseau interne pour les communications entre services (db, redis, vote, result, worker)
+- **front-tier** : Réseau exposé pour les interfaces utilisateur (nginx, vote, result)
 
-## Optional extended version
-- healthchecks on vote, redis and db services (some scripts are given in `healthcheck` directory)
-- reducing the size of images
-- multistage build on the worker service (.NET)
+## Volumes
 
+- **db-data** : Volume persistant pour les données PostgreSQL
 
-## Some elements
+## Healthchecks
 
-The base image will contain the basic tools for the language the application is written in.
-You should use a tag to specify which version of the image you want to pull.
-For building purposes, it is good practice to use a `slim` version of the image.
+Des scripts de healthcheck sont implémentés pour les services suivants :
+- **db** : Vérifie l'état de PostgreSQL
+- **redis** : Vérifie l'état de Redis
 
+## Déploiement
 
+### Prérequis
+- Docker
+- Docker Compose
 
-### `vote` service
+### Installation et démarrage
 
-This is a Python web server using the Flask framework. It presents a front-end for the user to submit their votes, then write them into the Redis key-value store.
-
-For building the Dockerfile, before starting `app.py`:
-- use the base image `python:3.11-slim`
-- requirements have to be copied and installed in the container
-- all necessary files and directories have to be copied in the container
-
-Port mapping:
-`5000` is used inside the container (see Python code). No port has to be exposed as the Nginx service is the entry point.
-
-Healthcheck:
-
-
-### `result` service
-
-This is a Node.js web server. The front-end presents the results of the votes. The result values are taken from the PostgreSQL database.
-
-Use the base image `node:18-slim`
-
-In the Dockerfile, before running the code, make the working directory to `/usr/local/app` and
-- copy package files into the container,
-- install `nodemon` with `npm install -g nodemon`
-- install more requirements:
-```
-npm ci
-npm cache clean --force
-mv /usr/local/app/node_modules /node_modules
-```
-- set the `PORT` environment variable
-
-Finally, run the code with `node server.js`.
-
-
-### `seed` service
-
-This is a Python and bash program used to virtually send many vote requests to the `vote` server.
-
-Use the base image `python:3.9-slim`
-
-First the file `make-data.py` has to be executed in the container. Second, the file `generate-votes.sh` has to be executed when starting the container.
-
-For benchmarking, `generate-votes.sh` uses the `ab` utility which needs to be installed, through the `apache2-utils` `apt` package.
-
-### `worker` service
-
-This is a .NET (C#) program that reads vote submissions from Redis store, compute the result and store it in the PostgreSQL database.
-
-It requires a little bit more work to compile and run:
-- use this as a base image
-```
-mcr.microsoft.com/dotnet/sdk:8.0
-```
-  with the argument `--platform=${BUILDPLATFORM}`
-- use `ARG` to define build arguments `TARGETPLATFORM`, `TARGETARCH` and `BUILDPLATFORM`. Print their values with `echo`.
-- in the `source/` directory, copy all worker files form this repo and run
-```
-dotnet restore -a $TARGETARCH
-dotnet publish -c release -o /app -a $TARGETARCH --self-contained false --no-restore
-```
-The application will be built inside the `/app` directory, launch with `dotnet Worker.dll`.
-
-For the multistage build, use this image: `mcr.microsoft.com/dotnet/runtime:8.0`.
-
-
-### Redis service
-
-This is a simple Redis service. Redis is a NOSQL database software focused on availability used for storing large volumes of data-structures (typically key-value pairs).
-
-use the base image `redis:alpine`
-
-In order to perform healthchecks while Redis is running, there must be a volume attached to the container. You will need to mount local the repo directory `./healthchecks/` into the `/healthchecks/` directory of the container.
-
-The check is done by executing the `redis.sh` script.
-
-
-### PostgreSQL database service
-
-This is a simple PostgreSQL service.
-
-Use the base image `postgres:15-alpine`
-
-The same logic applies for healthchecks, mount a volume, use `postgres.sh` for running checks.
-
-Moreover, in order to persist the data that comes from the votes, you need to create a Docker volume and attach it to the container.
-The volume will be named `db-data` and attached to the `/var/lib/postgresql/data` directory inside the container.
-
-### Nginx loadbalancer service
-
-This is a simple Nginx service. At its core, Nginx is a web-server but it can also be used for other purposes such as loadbalancing, HTTP cache, reverse proxy, etc.
-
-Use the base image `nginx`.
-
-To configure Nginx as a loadbalancer (LB), you first need to edit accordingly the `./nginx/nginx.conf` file from this repo.
-Then in the Dockerfile:
-- remove the default Nginx configuration located at `/etc/nginx/conf.d/default.conf`,
-- copy `./nginx/nginx.conf` into the container at the above location.
-
-
-### Networking
-
-* The Redis store, the `worker` service and the PostgreSQL database are only available inside the `back-tier` network.
-* The `vote` and `result` services are on both the `front-tier` and `back-tier` network in order to (1) expose the frontend to users, and (2) communicate with the databases.
-* Finally, the `seed` and Nginx loadbalancer are on the `front-tier`.
-
-
-
-# Kubernetes project
-
-The goal of this project is to deploy the previous application to a Kubernetes cluster. 
-
-![image](login-nuage-voting-k8s.drawio.svg)
-
-## Preliminary phase: push your Docker images into a GCP container registry
-
-1. In the GCP dashboard, go to *Artifact Registry* and create a *Repository*.
-Give it a name e.g. `voting-image`, and a *region* e.g. `europe-west9`.
-Once created, inspect the repository and copy its path, it should look something like `europe-west9-docker.pkg.dev/your-gcp-project/voting-image`.
-
-1. Before pushing to the registry, issue the following command in order to authenticate your laptop to the registry:
-```
-gcloud auth configure-docker europe-west9-docker.pkg.dev
-```
-Note that this command can be found in the "Setup Instructions" button in the registry repo.
-
-1. We then need to tag the images with the corresponding registry path, followed by their original name. We can do it *either* in bulk with bare Docker Compose or one by one with Docker.
-
-    * Option 1: Within `docker-compose.yml` file, for each service that `build`s an image, add the `image` field. E.g. for the `result` service:
-      ```
-      result:
-        image: europe-west9-docker.pkg.dev/your-gcp-project/voting-image/result
-        build:
-          context: ./result
-      ```
-      Re-build the images with `docker compose build` and verify with `docker image ls`.
-
-    * Option 2: For each service we need to build the image and tag the resulting hash. E.g. with `result`:
-        * `docker build result/`
-        * `docker tag 0cc5784ad220 europe-west9-docker.pkg.dev/nuage-k8s/login-nuage-images/result`
-
-1. Finally, push the images. Either
-    * with Docker Compose: `docker compose push`
-    * or with Docker, e.g. `docker push europe-west9-docker.pkg.dev/your-gcp-project/voting-image/result`
-
-
-* In case you struggle making this work, you can use our public images from Docker Hub during the session (not in the repo you will send us).
-  The tags are prefixed with `eloip13009`, for example `eloip13009/result`.
-  The suffixes are `vote`, `result`, `worker`, `seed-data`, `postgres-hs` and `redis-hs`.
-
-You will notice that for the `seed-data` image, the public version only sends a total of 300 votes, instead of 3000 previously.
-
-
-## Mandatory version
-
-<!-- -->
-
-Deploy a working application (with temporary database store)
-
-* `vote`, `result`, `redis` and `db`, each with a `Deployment` and a `Service`.
-* `worker` only needs a `Deployment`.
-* Make the data of the `db` persist even if the associated pod is deleted
-    - Use a `PersistentVolumeClaim`
-    - In the corresponding `Deployment`, under `volumeMounts`, there should be `subPath: data`
-* `seed` will be run as a `Job` that is *not restarted*.
-
-## Optional extensions
-
-The two extensions are independent.
-
-1. Add `livenessProbe`s to reflect the `healthchecks` of last week's Docker project.
-    * `result` and `vote` use the `httpGet` probe.
-    * `redis` and `db` use the `exec` probe to run the `healthchecks/{redis.sh,postgres}.sh` scripts.
-        - TIP: You have to create an image for redis and postgres with sh files included, or better use an init container to get [healthchecks files](https://gitlab.imt-atlantique.fr/login-nuage/healthchecks/) inside a shared volume [see this page](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)
-2. Use a `ConfigMap` to pass environment variables to your pods
-    1. create the `ConfigMap` with a manually created manifest
-    2. use `Kustomize` to generate the `ConfigMap` 
-3. Use an `HorizontalPodAutoscaler` to automatically scale the number of replicas for `vote`
-
-<!-- -->
-
-## Appendix: Useful commands
-
-Print the list of resources we can declare in a manifest, i.e. available values of `apiVersion` and `kind`
-
-    kubectl api-resources
-
-
-Print the documentation of a resource, i.e. the accepted fields in the manifest
-
-    kubectl explain deployment.spec.template.spec.containers.livenessProbe
-
-
-Print the logs of a container. When selecting a pod, `kubectl` will choose one. The `-f` options means "follow", i.e. print the logs continuously, akin to the Linux `tail -f` command.
-
-    kubectl logs -f pods/vote<TAB>
-
-
-Apply *all* manifests of a repository
-
-    kubectl apply -f k8s-manifests/
-
-
-Show resources continuously (refreshed every one second) with `watch`. Beware, `all` do not mean *all* resources, only "user" resources. E.g. `PersistentVolume`s and `StorageClass`es are not showed.
-
-    watch -n1 kubectl get all
-
-
-Execute a command in a container. E.g. dump the `votes` table in the Postgres pod.
-
-    kubectl exec pods/db<TAB> -- pg_dump -U postgres -t public/votes
-
-
-For commands that handle resources, the `-l` option applies it on resources holding the specified `labels`. E.g. to delete all resources related to the voting app (those with `metadata.labels.app = vote`)
-
-    kubectl delete all -lapp=vote
-
-# Ansible project
-
-See the dedicated website at https://ue-devops-fila2.gitlab-pages.imt-atlantique.fr/cours-ansible-voting-app/docs/1-intro/1-infra-hybride/.
-
-# Terraform project
-
-**WARNING!!!! For FISE LOGIN only! (not FIL A2)**
-
-## Objectives
-
-The objective is to use Terraform to deploy the voting app.
-
-The tutorial on Terraform did not give you _all_ elements for this project: it was on purpose.
-The point is for you to learn how to seek information in providers and other documentations.
-But most elements in the tutorials can be directly applied.
-
-Different levels are possible, the more advancement you make the better. **Part 1 and Part 2 are mandatory.**
-
-## Part 1 mandatory - Docker
-
-In this first part, you must write code that deploys the application with the Terraform Docker provider.
-The app will thus be deployed locally inside containers on your machine.
-
-**TIP**: start from your previous `docker-compose.yml`.
-
-## Part 2 mandatory - GKE and Kubernetes
-
-In this second part, you must write code that deploys the application onto a Kubernetes cluster provisioned with Terraform on GKE.
-Google and Kubernetes providers will be thus be used.
-
-**TIP**: you can start form the GKE tutorial and from your previous Kubernetes manifests.
-
-**IMPORTANT**: Make sure to organize your Terraform code well. Attention will be given to your organization (modules, directories, files)
-
-## Part 3 optional - GKE, Kubernetes and OpenStack
-
-In this last part, you must deploy with Terraform the `Redis` database inside a VM on the school's OpenStack platform.
-This database must then communicate with the other components of the application located on the GKE cluster.
-
-### Changes to make this work
-
-By default, Redis is supposed to be used only locally and does not have a password.
-You must thus modify the application code that uses Redis so that they connect with a password.
-
-#### Inside `vote/app.py`
-
-On line 21, change
-```
-    g.redis = Redis(host="redis", db=0, socket_timeout=5)
-```
-to
-```
-    g.redis = Redis(host="redis", password="osef", db=0, socket_timeout=5)
+1. Clonez ce dépôt :
+```bash
+git clone <repository-url>
+cd <repository-directory>
 ```
 
-#### Inside `worker/Program.cs`
-
-On line 116, change
-```
-    return ConnectionMultiplexer.Connect(ipAddress);
-```
-to
-```
-    return ConnectionMultiplexer.Connect("redis,password=osef");
+2. Démarrez l'application avec Docker Compose :
+```bash
+docker-compose up -d
 ```
 
-#### cloud-init script to install Redis on a VM
-
-Use this script as in cloud-init to install Redis.
+3. Accédez à l'interface de vote :
 ```
-#!/usr/bin/env bash
-#
-# Install and configure Redis
-
-DEBIAN_FRONTEND=noninteractive apt update -q
-DEBIAN_FRONTEND=noninteractive apt install -q -y redis
-
-sed -e '/^bind/s/bind.*/bind 0.0.0.0/' -i /etc/redis/redis.conf
-sed -e '/# requirepass/s/.*/requirepass osef/' -i /etc/redis/redis.conf
+http://localhost:80
 ```
 
-## Destroy everything
-
-To keep some credits, make sure you execute `terraform destroy`.
-
-There is a surprise here: GKE clusters cannot be destroyed by default, we need to modify the state by hand to tell terraform it is OK to delete it.
-
-Open `terraform.tfstate`, look for the property `deletion_protection` and set its value to `false`.
-
-Alternatively, use `sed`:
+4. Accédez à l'interface des résultats :
 ```
-    sed -e '/deletion_protection/s/true/false/' -i terraform.tfstate
+http://localhost:3000
 ```
 
-### Améliorations
+### Arrêt de l'application
 
-* Faire un du script d'install redis un template pour passer le mot de passe en paramètre. Adaptez le `.tf`.
-* À partir du template `redis_endpointslice.yaml` qui configure une IP `endpoint_ip` de la BDD Redis externe. Adaptez le .tf
+```bash
+docker-compose down
+```
 
+Pour supprimer également le volume persistant :
+```bash
+docker-compose down -v
+```
+
+## Structure des services
+
+### Vote (vote1 & vote2)
+Services Python Flask permettant aux utilisateurs de voter pour l'option A (Cats) ou l'option B (Dogs).
+
+### Redis
+Service de cache pour stocker temporairement les votes avant traitement.
+
+### Worker
+Service .NET qui récupère les votes depuis Redis et les enregistre dans la base de données PostgreSQL.
+
+### DB (PostgreSQL)
+Base de données persistante stockant les résultats des votes.
+
+### Result
+Interface web Node.js qui affiche les résultats des votes en temps réel.
+
+### Nginx
+Répartiteur de charge qui distribue les requêtes entre les services vote1 et vote2.
+
+### Seed
+Service qui simule des votes pour tester l'application. 
+
+
+# Kubernetes Voting Application
+
+Ce projet implémente le déploiement de l'application de vote sur un cluster Kubernetes.
+
+## Architecture
+
+L'application est déployée sur Kubernetes avec les composants suivants :
+- **vote** : Déploiement de l'interface de vote (3 réplicas avec autoscaling)
+- **result** : Déploiement de l'interface des résultats
+- **worker** : Déploiement du service de traitement des votes
+- **redis** : Déploiement et service pour la base de données Redis
+- **db** : Déploiement et service pour la base de données PostgreSQL avec volume persistant
+- **seed** : Job Kubernetes pour injecter des données de test
+
+## Scripts d'automatisation
+
+Pour faciliter le déploiement, deux scripts shell ont été développés :
+
+### 1. generate-images-services.sh
+Ce script automatise la création et le chargement des images Docker dans Minikube :
+```bash
+./generate-images-services.sh
+```
+
+Le script :
+- Construit les images Docker pour les services (vote, result, worker, seed-data)
+- Charge ces images dans Minikube
+
+### 2. apply-k8s.sh
+Ce script applique les manifestes Kubernetes dans l'ordre approprié :
+```bash
+./apply-k8s.sh
+```
+
+Le script :
+- Déploie la base de données PostgreSQL avec son volume persistant
+- Déploie le service Redis
+- Déploie le worker
+- Déploie les services vote et result
+- Applique le job de génération de données
+- Lance le tunnel Minikube pour exposer les services
+
+## Caractéristiques principales
+
+### Persistance des données
+- Un PersistentVolume (PV) et PersistentVolumeClaim (PVC) sont configurés pour PostgreSQL
+- La configuration utilise subPath pour préserver les données même en cas de suppression du pod
+
+### Healthchecks
+- Des livenessProbes sont configurés pour tous les services
+- Les services db et redis utilisent des scripts de healthcheck via des initContainers
+- Les services vote et result utilisent des healthchecks HTTP
+
+### Autoscaling
+- Le service vote est configuré avec un HorizontalPodAutoscaler
+- Le scaling est basé sur l'utilisation CPU (seuil à 50%)
+- Configuration : 1 à 5 réplicas
+
+## Déploiement manuel
+
+Si vous préférez un déploiement manuel plutôt que d'utiliser les scripts :
+
+1. Construire et charger les images dans Minikube :
+```bash
+# Pour chaque service
+docker build -t <service>:latest ./<service>
+minikube image load <service>:latest
+```
+
+2. Appliquer les manifestes Kubernetes :
+```bash
+# Base de données avec volume persistant
+kubectl apply -f db-service-deployment-volume.yaml
+
+# Redis
+kubectl apply -f redis-service-deployment.yaml
+
+# Worker
+kubectl apply -f worker/deployment.yaml
+
+# Vote
+kubectl apply -f vote/deployment.yaml
+kubectl apply -f vote/service.yaml
+kubectl apply -f vote/horizontalpodautoscaler.yml
+
+# Result
+kubectl apply -f result/deployment.yaml
+kubectl apply -f result/service.yaml
+
+# Seed job
+kubectl apply -f seed-data/job.yaml
+```
+
+3. Créer un tunnel pour accéder aux services :
+```bash
+minikube tunnel
+```
+
+## Accès aux applications
+
+- Interface de vote : http://localhost (Service LoadBalancer)
+- Interface des résultats : http://localhost:3000
+
+## Test de charge
+
+Un script de test de charge est disponible pour tester l'autoscaling :
+```bash
+./vote/load-test.sh
+```
+
+## Nettoyage
+
+Pour supprimer toutes les ressources :
+```bash
+kubectl delete -f <manifest-files>
+```
+
+Ou pour supprimer toutes les ressources avec le label app=vote :
+```bash
+kubectl delete all -lapp=vote
+``` 
