@@ -7,19 +7,15 @@ echo "Applying Kubernetes manifests..."
 
 # Apply database manifests first (PV, PVC, Deployment, Service)
 echo "Applying database manifests..."
-kubectl apply -f db-deployment.yaml
+kubectl apply -f db-service-deployment-volume.yaml
 
 # Wait for database to be ready
-echo "Waiting for database to be ready..."
-kubectl wait --for=condition=ready pod -l app=db --timeout=60s
-
-# Apply seed job
-echo "Applying seed job..."
-kubectl apply -f seed-data/job.yaml
+#echo "Waiting for database to be ready..."
+#kubectl wait --for=condition=ready pod -l app=db --timeout=60s
 
 # Apply Redis manifests
 echo "Applying Redis manifests..."
-kubectl apply -f redis-deployment.yaml
+kubectl apply -f redis-service-deployment.yaml
 
 # Apply Worker manifests
 echo "Applying Worker manifests..."
@@ -39,5 +35,8 @@ kubectl apply -f result/service.yaml
 echo "Applying seed job..."
 kubectl apply -f seed-data/job.yaml
 
-
 echo "All manifests have been applied successfully!"
+
+echo "Launching minikube tunnel"
+
+minikube tunnel

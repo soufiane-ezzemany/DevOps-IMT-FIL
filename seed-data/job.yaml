@@ -1,13 +1,13 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: seed
+  name: seed-data
 spec:
   template:
     spec:
       containers:
-        - name: seed
-          image: seed:latest
+        - name: seed-data
+          image: seed-data:latest
           imagePullPolicy: Never
       restartPolicy: Never
   backoffLimit: 4
